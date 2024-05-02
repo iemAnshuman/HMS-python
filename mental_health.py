@@ -17,16 +17,19 @@ def quiz():
         return 
 
 def main():
-    while(1):
+    while(True):
         print("Menu: ")
         print("0. Exit")
+        print("00. Back")
         print("1. Quiz for testing")
 
         choice = input("Enter the choice: ")
 
         if choice == '0':
             print("Exiting...")
-            return
+            exit(0)
+        elif choice == '00':
+            break
         elif choice == '1':
             quiz()
         else:

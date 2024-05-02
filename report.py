@@ -1,66 +1,52 @@
-# made through help
+import calories
+import exercise
+import water
+import mental_health
+import log
 
-import os
-import datetime
-from glob import glob
+# Function to collect all data
+def collect_all_data():
+    calorie_data = calories.get_calorie_data()
+    exercise_data = exercise.get_exercise_data()
+    water_data = water.get_water_data()
+    mental_health_data = mental_health.get_mental_health_data()
+    log_data = log.get_log_data()
+    return {
+        "calorie": calorie_data,
+        "exercise": exercise_data,
+        "water": water_data,
+        "mental_health": mental_health_data,
+        "log": log_data
+    }
 
-class WeeklyReportGenerator:
-    def __init__(self, base_path):
-        self.base_path = base_path
-        self.week_data = {
-            'calories': {},
-            'water': {},
-            'exercise': {}
-        }
+# Analysis function to calculate averages
+def calculate_averages(data):
+    averages = {}
+    for key, value in data.items():
+        if value:  # Ensure there is data to average
+            average = sum(value) / len(value)
+            averages[key] = average
+    return averages
 
-    def load_weekly_data(self):
-        # Load data for the past 7 days
-        end_date = datetime.date.today()
-        start_date = end_date - datetime.timedelta(days=6)
+# Main report function
+def generate_report():
+    data = collect_all_data()
+    averages = calculate_averages(data)
+    report = "Health Management System Report\n"
+    report += "--------------------------------\n"
+    for category, avg in averages.items():
+        report += f"Average {category} data: {avg:.2f}\n"
+    
+    # Add more detailed analyses as needed
+    report += "\nDetailed Analysis:\n"
+    report += f"Total water intake: {sum(data['water']):.2f} liters\n"
+    report += f"Total calories consumed: {sum(data['calorie']):.2f} calories\n"
+    report += f"Total exercise done: {sum(data['exercise']):.2f} minutes\n"
+    report += "Mental health status: Good" if any(data['mental_health']) else "Mental health status: Needs attention"
+    
+    return report
 
-        for single_date in (start_date + datetime.timedelta(n) for n in range(7)):
-            date_str = single_date.strftime('%Y_%m_%d')
-            self.load_daily_data('calories', f"calories_{date_str}.txt")
-            self.load_daily_data('water', f"water_{date_str}.txt")
-            self.load_daily_data('exercise', f"exercise_{date_str}.txt")
-
-    def load_daily_data(self, data_type, filename):
-        filepath = os.path.join(self.base_path, filename)
-        if os.path.exists(filepath):
-            with open(filepath, 'r') as file:
-                for line in file:
-                    parts = line.strip().split(',')
-                    if data_type == 'calories':
-                        # Assuming the file structure: food,calories
-                        self.week_data[data_type][parts[0]] = self.week_data[data_type].get(parts[0], 0) + int(parts[1])
-                    elif data_type == 'water':
-                        # Assuming the file structure: date_str,amount
-                        date_str = parts[0]
-                        self.week_data[data_type][date_str] = self.week_data[data_type].get(date_str, 0) + float(parts[1])
-                    elif data_type == 'exercise':
-                        # Assuming the file structure: date_str,exercise_name,duration
-                        date_str, exercise_name, duration = parts[0], parts[1], int(parts[2])
-                        if date_str not in self.week_data[data_type]:
-                            self.week_data[data_type][date_str] = []
-                        self.week_data[data_type][date_str].append((exercise_name, duration))
-
-    def generate_report(self):
-        # Calculate averages and totals
-        total_water = sum(self.week_data['water'].values())
-        avg_water = total_water / len(self.week_data['water']) if self.week_data['water'] else 0
-
-        total_calories = sum(self.week_data['calories'].values())
-        avg_calories = total_calories / len(self.week_data['calories']) if self.week_data['calories'] else 0
-
-        exercise_summary = {}
-        for daily_exercises in self.week_data['exercise'].values():
-            for name, duration in daily_exercises:
-                exercise_summary[name] = exercise_summary.get(name, 0) + duration
-
-        # Print the report
-        print(f"Weekly Water Intake: {total_water}L (Avg: {avg_water:.2f}L/day)")
-        print(f"Weekly Calorie Intake: {total_calories} (Avg: {avg_calories:.2f}/day)")
-        print("Weekly Exercise Summary:")
-        for name, total_duration in exercise_summary.items():
-            print(f"  {name}: {total_duration} minutes")
-
+# Example usage
+if __name__ == "__main__":
+    full_report = generate_report()
+    print(full_report)
